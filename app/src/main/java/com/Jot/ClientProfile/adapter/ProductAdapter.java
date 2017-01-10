@@ -26,20 +26,23 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.MyViewHo
    private List<Product> products;
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        public ImageView thumbnail;
-        public TextView productName;
+        private ImageView thumbnail;
+        private TextView mProductName;
+        private TextView mPriceProduct;
        // public ImageView thumbnail;
        // public ImageView overflow;
 
         public MyViewHolder(View view) {
             super(view);
-            productName = (TextView) view.findViewById(R.id.tv_product_name);
-           // count = (TextView) view.findViewById(R.id.count);
+            mProductName = (TextView) view.findViewById(R.id.tv_product_name);
+            mPriceProduct = (TextView) view.findViewById(R.id.tv_product_price);
             thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
             //overflow = (ImageView) view.findViewById(R.id.overflow);
         }
     }
 
+    public ProductAdapter() {
+    }
 
     public ProductAdapter(Context mContext, List<Product> products) {
         this.mContext = mContext;
@@ -56,9 +59,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.MyViewHo
 
     @Override
     public void onBindViewHolder(final MyViewHolder holder, int position) {
+        //Here all the details of the product are bind
         Product product = products.get(position);
-        holder.productName.setText(product.getName());
-
+        holder.mProductName.setText(product.getName());
+        holder.mPriceProduct.setText(product.getPrice());
         Glide.with(mContext).load(product.getSmall())
                 .thumbnail(0.5f)
                 .crossFade()

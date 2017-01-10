@@ -2,10 +2,13 @@ package com.Jot.ClientProfile.activity;
 
 import android.app.ProgressDialog;
 import android.content.res.Resources;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -14,17 +17,17 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.Jot.ClientProfile.R;
 import com.Jot.ClientProfile.Util.Const;
 import com.Jot.ClientProfile.adapter.ProductAdapter;
+import com.Jot.ClientProfile.adapter.ProductViewAdapter;
 import com.Jot.ClientProfile.app.AppController;
 import com.Jot.ClientProfile.model.Product;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.bumptech.glide.Glide;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,6 +53,15 @@ public class MainActivity extends AppCompatActivity {
 
         initCollapsingToolbar();
 
+        // add back arrow to toolbar
+        if (getSupportActionBar() != null){
+            final Drawable upArrow = getResources().getDrawable(R.drawable.abc_ic_ab_back_material);
+            upArrow.setColorFilter(getResources().getColor(R.color.White), PorterDuff.Mode.SRC_ATOP);
+            getSupportActionBar().setHomeAsUpIndicator(upArrow);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
+
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         pDialog = new ProgressDialog(this);
         products = new ArrayList<>();
@@ -61,13 +73,36 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.setAdapter(mAdapter);
 
-        fetchImages();
 
-        try {
-            Glide.with(this).load(R.drawable.cover).into((ImageView) findViewById(R.id.backdrop));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//Todo Client backdrop
+//        try {
+//            Glide.with(this).load(R.drawable.cover).into((ImageView) findViewById(R.id.backdrop));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+        // Fetching image in big format
+
+          mRecyclerView.addOnItemTouchListener(new ProductViewAdapter.RecyclerTouchListener(getApplicationContext(), mRecyclerView, new ProductViewAdapter.ClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("products", products);
+                bundle.putInt("position", position);
+
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                SlideshowDialogFragment newFragment = SlideshowDialogFragment.newInstance();
+                newFragment.setArguments(bundle);
+                newFragment.show(ft, "slideshow");
+            }
+
+            @Override
+            public void onLongClick(View view, int position) {
+
+            }
+        }));
+
+        fetchProducts();
     }
 
     /**
@@ -103,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void fetchImages() {
+    private void fetchProducts() {
 
         pDialog.setMessage("Loading...");
         pDialog.show();
@@ -121,12 +156,11 @@ public class MainActivity extends AppCompatActivity {
                                 JSONObject object = response.getJSONObject(i);
                                 Product product = new Product();
                                 product.setName(object.getString(Const.TAG_PRODUCT_NAME));
-
+                                product.setPrice(object.getString(Const.TAG_PRODUCT_PRICE));
 //                                JSONObject url = object.getJSONObject("url");
                                 product.setSmall(object.getString(Const.TAG_PRODUCT_IMAGE_URL));
 //                                product.setMedium(url.getString("medium"));
 //                                product.setLarge(url.getString("large"));
-                               // product.setPrice(object.getString(Const.TAG_PRODUCT_IMAGE_URL));
 
                                 products.add(product);
 
@@ -142,6 +176,12 @@ public class MainActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 Log.e(TAG, "Error: " + error.getMessage());
                 pDialog.hide();
+
+                //Network Handling
+                if (error.networkResponse == null){
+                    //Show timeout error message
+                    Toast.makeText(getApplicationContext(),"Could Not retrieve Please Try later...",Toast.LENGTH_LONG).show();
+                }
             }
         });
 

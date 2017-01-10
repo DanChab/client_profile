@@ -12,4 +12,5 @@ public class Const {
     public static final String TAG_PRODUCT_IMAGE_URL = "ProductImage";
     public static final String TAG_PRODUCT_NAME = "ProductName";
     public static final String TAG_PRODUCT_PRICE = "productPrice";
+    public static final String TAG_CLIENT_DROPBACK = "backdrop";
 }
